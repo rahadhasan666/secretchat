@@ -12,6 +12,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+     <script>
+        // 🔥 SAME CONFIG AS index.html - REPLACE WITH YOUR ACTUAL VALUES 🔥
+     const firebaseConfig = {
+  apiKey: "AIzaSyA7-8Dg6oN4H50Kxa3jNW1FeCHQsCGg3nY",
+  authDomain: "sms-world-5e105.firebaseapp.com",
+  projectId: "sms-world-5e105",
+  storageBucket: "sms-world-5e105.firebasestorage.app",
+  messagingSenderId: "1023461332244",
+  appId: "1:1023461332244:web:c737340fe5d31171671e01",
+  measurementId: "G-2S04WLKLE0"
+};
+        
+        // Initialize Firebase
+        if (typeof firebase !== 'undefined') {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(FIREBASE_CONFIG);
+                    console.log('✅ Firebase initialized in account system');
+                }
+            } catch (error) {
+                console.error('❌ Firebase init error in account system:', error);
+            }
+        }
+    </script>
     
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
