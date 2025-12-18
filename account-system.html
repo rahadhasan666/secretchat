@@ -127,41 +127,39 @@
     <script src="js/auth.js"></script>
 <script>
     // Simple initialization
-    async function initialize() {
-        console.log('🔄 Initializing...');
+    async function initializeApp() {
+        console.log('🔄 Initializing app...');
         
         try {
-            // Check Firebase config
-            const savedConfig = localStorage.getItem('firebaseConfig');
-            if (!savedConfig) {
-                window.location.href = 'firebase-config.html';
-                return;
+            // 1. Check if Firebase SDK is loaded
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase SDK not loaded. Please check internet connection.');
             }
             
-            // Load Firebase
+            console.log('✅ Firebase SDK loaded');
+            
+            // 2. Initialize Firebase
             await window.firebaseConfig.initialize();
-            console.log('✅ Firebase loaded');
+            console.log('✅ Firebase initialized');
             
-            // Check if authSystem exists
-            if (!window.authSystem) {
-                console.error('❌ authSystem not found');
-                throw new Error('Authentication system not loaded');
-            }
+            // 3. Initialize Auth System
+            await window.authSystem.initialize();
+            console.log('✅ Auth system initialized');
             
-            console.log('✅ authSystem found');
-            
-            // Check if already logged in
+            // 4. Check if already logged in
             if (window.authSystem.currentUser) {
                 window.location.href = 'chat-dashboard.html';
             }
             
+            console.log('🎉 App initialized successfully');
+            
         } catch (error) {
-            console.error('❌ Initialization error:', error);
-            alert('Error: ' + error.message + '\nPlease check console (F12)');
+            console.error('❌ Initialization failed:', error);
+            alert('Error: ' + error.message + '\nPlease refresh the page.');
         }
     }
     
-    // Simple login function
+    // Login handler
     async function handleLogin(e) {
         e.preventDefault();
         
@@ -178,26 +176,16 @@
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
         
         try {
-            // Make sure authSystem is initialized
-            if (!window.authSystem.auth) {
-                await window.authSystem.initialize();
-            }
-            
-            // Login
             await window.authSystem.normalLogin(email, password);
-            
-            // Redirect
             window.location.href = 'chat-dashboard.html';
-            
         } catch (error) {
-            console.error('Login error:', error);
-            alert('Login failed: ' + error.message);
+            alert(error.message);
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
         }
     }
     
-    // Simple signup function
+    // Signup handler
     async function handleSignup(e) {
         e.preventDefault();
         
@@ -206,8 +194,8 @@
             username: document.getElementById('username').value,
             email: document.getElementById('email').value,
             password: document.getElementById('password').value,
-            phone: document.getElementById('phone').value || null,
-            address: document.getElementById('address').value || null,
+            phone: document.getElementById('phone').value || '',
+            address: document.getElementById('address').value || '',
             dob: document.getElementById('dob').value || null
         };
         
@@ -223,23 +211,14 @@
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
         
         try {
-            // Make sure authSystem is initialized
-            if (!window.authSystem.auth) {
-                await window.authSystem.initialize();
-            }
-            
-            // Create account
             const result = await window.authSystem.createUserAccount(userData);
-            
             alert(result.message);
             
             // Auto login
             await window.authSystem.normalLogin(userData.email, userData.password);
             window.location.href = 'chat-dashboard.html';
-            
         } catch (error) {
-            console.error('Signup error:', error);
-            alert('Signup failed: ' + error.message);
+            alert(error.message);
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
         }
@@ -261,12 +240,19 @@
     
     // Load on start
     window.onload = function() {
-        console.log('Page loaded, initializing...');
-        initialize();
+        console.log('Page loaded');
+        initializeApp();
         
         // Attach form handlers
         document.getElementById('loginForm').addEventListener('submit', handleLogin);
         document.getElementById('signupForm').addEventListener('submit', handleSignup);
+        
+        // Load remembered email
+        const rememberedEmail = localStorage.getItem('rememberedEmail');
+        if (rememberedEmail) {
+            document.getElementById('loginEmail').value = rememberedEmail;
+            document.getElementById('rememberMe').checked = true;
+        }
     };
 </script>
     
