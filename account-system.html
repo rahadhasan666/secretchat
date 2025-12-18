@@ -126,84 +126,118 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
 <script>
-    // Simple initialization
+    // ==================== SIMPLE INITIALIZATION ====================
+    
     async function initializeApp() {
-        console.log('🔄 Initializing app...');
+        console.log('🔄 Initializing application...');
         
         try {
-            // 1. Check if Firebase SDK is loaded
-            if (typeof firebase === 'undefined') {
-                throw new Error('Firebase SDK not loaded. Please check internet connection.');
+            // Step 1: Check if Firebase config exists
+            console.log('Step 1: Checking Firebase config...');
+            if (!window.firebaseConfig || !window.firebaseConfig.config) {
+                throw new Error('Firebase configuration not loaded');
             }
+            console.log('✅ Firebase config loaded');
             
-            console.log('✅ Firebase SDK loaded');
-            
-            // 2. Initialize Firebase
+            // Step 2: Initialize Firebase
+            console.log('Step 2: Initializing Firebase...');
             await window.firebaseConfig.initialize();
             console.log('✅ Firebase initialized');
             
-            // 3. Initialize Auth System
+            // Step 3: Initialize Auth System
+            console.log('Step 3: Initializing Auth System...');
             await window.authSystem.initialize();
-            console.log('✅ Auth system initialized');
+            console.log('✅ Auth System initialized');
             
-            // 4. Check if already logged in
+            // Step 4: Check if user is already logged in
+            console.log('Step 4: Checking auth state...');
             if (window.authSystem.currentUser) {
+                console.log('User already logged in, redirecting...');
                 window.location.href = 'chat-dashboard.html';
+                return;
             }
             
-            console.log('🎉 App initialized successfully');
+            console.log('✅ Application initialized successfully');
+            showMessage('Ready to login/signup', 'success');
             
         } catch (error) {
             console.error('❌ Initialization failed:', error);
-            alert('Error: ' + error.message + '\nPlease refresh the page.');
+            showMessage('Initialization error: ' + error.message, 'error');
         }
     }
     
-    // Login handler
+    // ==================== LOGIN HANDLER ====================
+    
     async function handleLogin(e) {
         e.preventDefault();
+        console.log('🔐 Processing login...');
         
-        const email = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         const button = e.target.querySelector('button[type="submit"]');
+        const originalText = button.innerHTML;
         
+        // Validation
         if (!email || !password) {
-            alert('Please enter email and password');
+            showMessage('Please enter email and password', 'error');
             return;
         }
         
         button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
         
         try {
+            console.log('Attempting login for:', email);
+            
+            // Login
             await window.authSystem.normalLogin(email, password);
-            window.location.href = 'chat-dashboard.html';
+            
+            // Save remember me
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem('rememberedEmail', email);
+            }
+            
+            // Redirect
+            showMessage('Login successful! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = 'chat-dashboard.html';
+            }, 1000);
+            
         } catch (error) {
-            alert(error.message);
+            console.error('Login error:', error);
+            showMessage(error.message, 'error');
             button.disabled = false;
-            button.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+            button.innerHTML = originalText;
         }
     }
     
-    // Signup handler
+    // ==================== SIGNUP HANDLER ====================
+    
     async function handleSignup(e) {
         e.preventDefault();
+        console.log('📝 Processing signup...');
         
         const userData = {
-            name: document.getElementById('fullName').value,
-            username: document.getElementById('username').value,
-            email: document.getElementById('email').value,
+            name: document.getElementById('fullName').value.trim(),
+            username: document.getElementById('username').value.trim(),
+            email: document.getElementById('email').value.trim(),
             password: document.getElementById('password').value,
-            phone: document.getElementById('phone').value || '',
-            address: document.getElementById('address').value || '',
+            phone: document.getElementById('phone').value.trim() || '',
+            address: document.getElementById('address').value.trim() || '',
             dob: document.getElementById('dob').value || null
         };
         
         const button = e.target.querySelector('button[type="submit"]');
+        const originalText = button.innerHTML;
         
-        // Validate
+        // Validation
         if (!userData.name || !userData.username || !userData.email || !userData.password) {
-            alert('Please fill all required fields');
+            showMessage('Please fill all required fields', 'error');
+            return;
+        }
+        
+        if (userData.password.length < 6) {
+            showMessage('Password must be at least 6 characters', 'error');
             return;
         }
         
@@ -211,23 +245,48 @@
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
         
         try {
-            const result = await window.authSystem.createUserAccount(userData);
-            alert(result.message);
+            console.log('Creating account for:', userData.email);
             
-            // Auto login
-            await window.authSystem.normalLogin(userData.email, userData.password);
-            window.location.href = 'chat-dashboard.html';
+            // Create account
+            const result = await window.authSystem.createUserAccount(userData);
+            
+            showMessage(result.message, 'success');
+            
+            // Auto login after successful signup
+            setTimeout(async () => {
+                try {
+                    await window.authSystem.normalLogin(userData.email, userData.password);
+                    window.location.href = 'chat-dashboard.html';
+                } catch (loginError) {
+                    showMessage('Account created! Please login manually.', 'success');
+                    showTab('login');
+                    document.getElementById('loginEmail').value = userData.email;
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            }, 2000);
+            
         } catch (error) {
-            alert(error.message);
+            console.error('Signup error:', error);
+            showMessage(error.message, 'error');
             button.disabled = false;
-            button.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+            button.innerHTML = originalText;
         }
     }
     
-    // Tab switching
+    // ==================== UTILITY FUNCTIONS ====================
+    
     function showTab(tabName) {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('form').forEach(form => form.classList.add('hidden'));
+        console.log('Switching to tab:', tabName);
+        
+        // Update tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show/hide forms
+        document.getElementById('signupForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.add('hidden');
         
         if (tabName === 'signup') {
             document.getElementById('signupForm').classList.remove('hidden');
@@ -238,14 +297,23 @@
         }
     }
     
-    // Load on start
-    window.onload = function() {
-        console.log('Page loaded');
-        initializeApp();
+    function showMessage(text, type) {
+        const messageElement = document.getElementById('message');
+        if (!messageElement) return;
         
-        // Attach form handlers
-        document.getElementById('loginForm').addEventListener('submit', handleLogin);
-        document.getElementById('signupForm').addEventListener('submit', handleSignup);
+        messageElement.textContent = text;
+        messageElement.className = `status-message ${type}`;
+        messageElement.classList.remove('hidden');
+        
+        setTimeout(() => {
+            messageElement.classList.add('hidden');
+        }, type === 'error' ? 5000 : 3000);
+    }
+    
+    // ==================== INITIALIZATION ====================
+    
+    window.onload = function() {
+        console.log('🌐 Page loaded');
         
         // Load remembered email
         const rememberedEmail = localStorage.getItem('rememberedEmail');
@@ -253,6 +321,15 @@
             document.getElementById('loginEmail').value = rememberedEmail;
             document.getElementById('rememberMe').checked = true;
         }
+        
+        // Initialize app
+        setTimeout(() => {
+            initializeApp();
+        }, 100);
+        
+        // Attach form handlers
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('signupForm').addEventListener('submit', handleSignup);
     };
 </script>
     
