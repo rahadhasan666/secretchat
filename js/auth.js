@@ -6,47 +6,55 @@ class AuthSystem {
         this.db = null;
         this.auth = null;
         this.currentUser = null;
+        this.initialized = false;
     }
 
-    // Initialize - SIMPLIFIED VERSION
+    // Initialize - SIMPLE AND RELIABLE
     async initialize() {
         console.log('🔑 Initializing Auth System...');
         
         try {
-            // Check if Firebase is loaded
-            if (typeof firebase === 'undefined') {
-                throw new Error('Firebase not loaded. Please refresh the page.');
-            }
+            // Step 1: Initialize Firebase first
+            console.log('Step 1: Initializing Firebase...');
+            const firebaseApp = await window.firebaseConfig.initialize();
             
-            // Get Firebase services
+            // Step 2: Get Firebase services
+            console.log('Step 2: Getting Firebase services...');
             this.auth = firebase.auth();
             this.db = firebase.firestore();
             
-            console.log('✅ Firebase services obtained');
+            if (!this.auth || !this.db) {
+                throw new Error('Firebase services not available');
+            }
             
-            // Setup auth state listener
+            console.log('✅ Firebase Auth:', typeof this.auth);
+            console.log('✅ Firebase Firestore:', typeof this.db);
+            
+            // Step 3: Setup auth state listener
+            console.log('Step 3: Setting up auth state listener...');
             this.auth.onAuthStateChanged((user) => {
-                console.log('👤 Auth state:', user ? 'User logged in' : 'No user');
+                console.log('👤 Auth state changed:', user ? 'Logged in' : 'Logged out');
                 this.currentUser = user;
             });
             
-            console.log('✅ Auth system initialized');
+            this.initialized = true;
+            console.log('✅ Auth system initialized successfully');
             return true;
             
         } catch (error) {
-            console.error('❌ Auth init error:', error);
-            throw new Error('Auth system failed: ' + error.message);
+            console.error('❌ Auth system initialization failed:', error);
+            throw new Error('Authentication failed: ' + error.message);
         }
     }
 
-    // Normal Login - SIMPLIFIED
+    // Normal Login
     async normalLogin(email, password) {
+        console.log('🔐 Login attempt for:', email);
+        
         try {
-            console.log('🔐 Login attempt for:', email);
-            
-            // Validate
-            if (!email || !password) {
-                throw new Error('Email and password required');
+            // Make sure auth is initialized
+            if (!this.auth) {
+                await this.initialize();
             }
             
             // Login with Firebase
@@ -62,32 +70,32 @@ class AuthSystem {
             console.error('❌ Login error:', error);
             
             // User-friendly error messages
-            let message = 'Login failed: ';
-            switch (error.code) {
-                case 'auth/user-not-found':
-                    message = 'No account found with this email.';
-                    break;
-                case 'auth/wrong-password':
-                    message = 'Incorrect password.';
-                    break;
-                case 'auth/invalid-email':
-                    message = 'Invalid email format.';
-                    break;
-                case 'auth/network-request-failed':
-                    message = 'Network error. Check internet connection.';
-                    break;
-                default:
-                    message += error.message;
+            let message = 'Login failed. ';
+            if (error.code === 'auth/user-not-found') {
+                message = 'No account found with this email.';
+            } else if (error.code === 'auth/wrong-password') {
+                message = 'Incorrect password.';
+            } else if (error.code === 'auth/invalid-email') {
+                message = 'Invalid email format.';
+            } else if (error.code === 'auth/network-request-failed') {
+                message = 'Network error. Check internet connection.';
+            } else {
+                message += error.message;
             }
             
             throw new Error(message);
         }
     }
 
-    // Create User Account - SIMPLIFIED
+    // Create User Account
     async createUserAccount(userData) {
+        console.log('📝 Creating account for:', userData.email);
+        
         try {
-            console.log('📝 Creating account for:', userData.email);
+            // Make sure auth is initialized
+            if (!this.auth) {
+                await this.initialize();
+            }
             
             // Create auth user
             const userCredential = await this.auth.createUserWithEmailAndPassword(
@@ -99,7 +107,7 @@ class AuthSystem {
             await this.db.collection('users').doc(userCredential.user.uid).set({
                 uid: userCredential.user.uid,
                 name: userData.name,
-                username: userData.username,
+                username: userData.username.toLowerCase(),
                 email: userData.email,
                 phone: userData.phone || '',
                 address: userData.address || '',
@@ -112,7 +120,7 @@ class AuthSystem {
             // Send email verification
             await userCredential.user.sendEmailVerification();
             
-            console.log('✅ Account created');
+            console.log('✅ Account created successfully');
             return {
                 success: true,
                 user: userCredential.user,
@@ -122,16 +130,15 @@ class AuthSystem {
         } catch (error) {
             console.error('❌ Signup error:', error);
             
-            let message = 'Signup failed: ';
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    message = 'Email already in use.';
-                    break;
-                case 'auth/weak-password':
-                    message = 'Password too weak (min 6 characters).';
-                    break;
-                default:
-                    message += error.message;
+            let message = 'Signup failed. ';
+            if (error.code === 'auth/email-already-in-use') {
+                message = 'Email already in use.';
+            } else if (error.code === 'auth/weak-password') {
+                message = 'Password too weak (minimum 6 characters).';
+            } else if (error.code === 'auth/invalid-email') {
+                message = 'Invalid email format.';
+            } else {
+                message += error.message;
             }
             
             throw new Error(message);
@@ -163,5 +170,6 @@ class AuthSystem {
 }
 
 // Create global instance
+console.log('🔄 Creating AuthSystem instance...');
 window.authSystem = new AuthSystem();
-console.log('✅ AuthSystem created');
+console.log('✅ AuthSystem instance created');
