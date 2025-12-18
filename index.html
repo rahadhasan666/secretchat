@@ -8,6 +8,31 @@
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <!-- Firebase SDK CDN -->
+
+    <!-- Your Firebase Configuration - REPLACE THESE VALUES -->
+    <script>
+        // REPLACE THESE WITH YOUR ACTUAL FIREBASE CREDENTIALS
+const firebaseConfig = {
+  apiKey: "AIzaSyA7-8Dg6oN4H50Kxa3jNW1FeCHQsCGg3nY",
+  authDomain: "sms-world-5e105.firebaseapp.com",
+  projectId: "sms-world-5e105",
+  storageBucket: "sms-world-5e105.firebasestorage.app",
+  messagingSenderId: "1023461332244",
+  appId: "1:1023461332244:web:c737340fe5d31171671e01",
+  measurementId: "G-2S04WLKLE0"
+};
+        
+        // Initialize Firebase when SDK loads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(FIREBASE_CONFIG);
+                    console.log('✅ Firebase initialized from inline config');
+                }
+            }
+        });
+    </script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
