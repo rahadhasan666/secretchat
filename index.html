@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark World | Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="entry-page">
+    <div class="container fade-in">
+        <div class="glass-card">
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h1 class="logo-text">DARK WORLD</h1>
+                <p class="subtitle">Premium Live Chat Experience</p>
+            </div>
+            
+            <form id="entryLoginForm" class="login-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="entryUsername" placeholder="Username" required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="entryPassword" placeholder="Password" required>
+                </div>
+                
+                <button type="submit" class="btn-primary">
+                    <span>Enter Dark World</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+            
+            <div id="errorMessage" class="error-message hidden">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Invalid credentials. Please try again.</span>
+            </div>
+            
+            <div class="footer-links">
+                <a href="firebase-config.html" class="config-link">
+                    <i class="fas fa-cog"></i> Firebase Configuration
+                </a>
+            </div>
+            
+            <footer class="main-footer">
+                <p>Developer: <a href="https://rahadhasan666.github.io/portfolio/" target="_blank">Rahad Hasan</a></p>
+            </footer>
+        </div>
+    </div>
+    
+    <script src="js/ui.js"></script>
+    <script>
+        document.getElementById('entryLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('entryUsername').value;
+            const password = document.getElementById('entryPassword').value;
+            const errorElement = document.getElementById('errorMessage');
+            
+            // Hardcoded credentials check
+            if (username === 'hard' && password === 'sex') {
+                // Success animation
+                document.querySelector('.glass-card').classList.add('success-animation');
+                errorElement.classList.add('hidden');
+                
+                // Redirect after animation
+                setTimeout(() => {
+                    window.location.href = 'account-system.html';
+                }, 1000);
+            } else {
+                // Error animation
+                errorElement.classList.remove('hidden');
+                errorElement.classList.add('shake');
+                
+                setTimeout(() => {
+                    errorElement.classList.remove('shake');
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Dark World</title>
+    <style>
+        /* All your CSS styles here */
+        /* Copy from your existing account-system.html */
+    </style>
+</head>
+<body>
+    <!-- Your HTML form here -->
+    <!-- Copy from your existing account-system.html -->
+    
+    <script>
+        // INLINE FIREBASE CONFIG
+        const firebaseConfig = {
+            initialize: async function() {
+                const savedConfig = localStorage.getItem('firebaseConfig');
+                if (!savedConfig) throw new Error('No Firebase config');
+                
+                const config = JSON.parse(savedConfig);
+                
+                // Load Firebase SDK
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                
+                // Initialize
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(config);
+                }
+                
+                return firebase;
+            }
+        };
+        
+        // INLINE AUTH SYSTEM
+        class AuthSystem {
+            constructor() {
+                this.db = null;
+                this.auth = null;
+                this.currentUser = null;
+            }
+            
+            async initialize() {
+                this.auth = firebase.auth();
+                this.db = firebase.firestore();
+                
+                // Listen for auth changes
+                this.auth.onAuthStateChanged((user) => {
+                    this.currentUser = user;
+                });
+                
+                return true;
+            }
+            
+            async normalLogin(email, password) {
+                const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
+                return { success: true, user: userCredential.user };
+            }
+            
+            async createUserAccount(userData) {
+                const userCredential = await this.auth.createUserWithEmailAndPassword(
+                    userData.email,
+                    userData.password
+                );
+                
+                // Save to Firestore
+                await this.db.collection('users').doc(userCredential.user.uid).set({
+                    uid: userCredential.user.uid,
+                    name: userData.name,
+                    username: userData.username,
+                    email: userData.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    onlineStatus: true
+                });
+                
+                return {
+                    success: true,
+                    user: userCredential.user,
+                    message: 'Account created!'
+                };
+            }
+        }
+        
+        // Initialize
+        window.firebaseConfig = firebaseConfig;
+        window.authSystem = new AuthSystem();
+        
+        // Rest of your JavaScript
+        // Copy from the simplified version above
+    </script>
+</body>
+</html>

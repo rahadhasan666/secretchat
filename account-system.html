@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | Dark World</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card">
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h1 class="logo-text">CREATE ACCOUNT</h1>
+                <p class="subtitle">Join Dark World Community</p>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('signup')">Sign Up</button>
+                <button class="tab" onclick="showTab('login')">Login</button>
+            </div>
+            
+            <!-- Signup Form -->
+            <form id="signupForm" class="signup-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="fullName" placeholder="Full Name" required autocomplete="name">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-at"></i>
+                    <input type="text" id="username" placeholder="Username (must be unique)" required autocomplete="username">
+                    <div id="usernameStatus" class="status-indicator hidden"></div>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" placeholder="Email Address" required autocomplete="email">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password (min. 6 characters)" required autocomplete="new-password" minlength="6">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="phone" placeholder="Phone Number" autocomplete="tel">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-home"></i>
+                    <input type="text" id="address" placeholder="Address" autocomplete="street-address">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-birthday-cake"></i>
+                    <input type="date" id="dob" placeholder="Date of Birth" required>
+                </div>
+                
+                <div class="terms">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+                </div>
+                
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Create Account</span>
+                </button>
+            </form>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form hidden">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="Email Address" required autocomplete="email">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+                </div>
+                
+                <div class="form-options">
+                    <label>
+                        <input type="checkbox" id="rememberMe">
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+                
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Sign In</span>
+                </button>
+            </form>
+            
+            <div id="message" class="status-message hidden"></div>
+            
+            <div class="footer-links">
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Entry
+                </a>
+            </div>
+            
+            <footer class="main-footer">
+                <p>Developer: <a href="https://rahadhasan666.github.io/portfolio/" target="_blank">Rahad Hasan</a></p>
+            </footer>
+        </div>
+    </div>
+    
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+<script>
+    // Simple initialization
+    async function initialize() {
+        console.log('🔄 Initializing...');
+        
+        try {
+            // Check Firebase config
+            const savedConfig = localStorage.getItem('firebaseConfig');
+            if (!savedConfig) {
+                window.location.href = 'firebase-config.html';
+                return;
+            }
+            
+            // Load Firebase
+            await window.firebaseConfig.initialize();
+            console.log('✅ Firebase loaded');
+            
+            // Check if authSystem exists
+            if (!window.authSystem) {
+                console.error('❌ authSystem not found');
+                throw new Error('Authentication system not loaded');
+            }
+            
+            console.log('✅ authSystem found');
+            
+            // Check if already logged in
+            if (window.authSystem.currentUser) {
+                window.location.href = 'chat-dashboard.html';
+            }
+            
+        } catch (error) {
+            console.error('❌ Initialization error:', error);
+            alert('Error: ' + error.message + '\nPlease check console (F12)');
+        }
+    }
+    
+    // Simple login function
+    async function handleLogin(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const button = e.target.querySelector('button[type="submit"]');
+        
+        if (!email || !password) {
+            alert('Please enter email and password');
+            return;
+        }
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+        
+        try {
+            // Make sure authSystem is initialized
+            if (!window.authSystem.auth) {
+                await window.authSystem.initialize();
+            }
+            
+            // Login
+            await window.authSystem.normalLogin(email, password);
+            
+            // Redirect
+            window.location.href = 'chat-dashboard.html';
+            
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Login failed: ' + error.message);
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+        }
+    }
+    
+    // Simple signup function
+    async function handleSignup(e) {
+        e.preventDefault();
+        
+        const userData = {
+            name: document.getElementById('fullName').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            phone: document.getElementById('phone').value || null,
+            address: document.getElementById('address').value || null,
+            dob: document.getElementById('dob').value || null
+        };
+        
+        const button = e.target.querySelector('button[type="submit"]');
+        
+        // Validate
+        if (!userData.name || !userData.username || !userData.email || !userData.password) {
+            alert('Please fill all required fields');
+            return;
+        }
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+        
+        try {
+            // Make sure authSystem is initialized
+            if (!window.authSystem.auth) {
+                await window.authSystem.initialize();
+            }
+            
+            // Create account
+            const result = await window.authSystem.createUserAccount(userData);
+            
+            alert(result.message);
+            
+            // Auto login
+            await window.authSystem.normalLogin(userData.email, userData.password);
+            window.location.href = 'chat-dashboard.html';
+            
+        } catch (error) {
+            console.error('Signup error:', error);
+            alert('Signup failed: ' + error.message);
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+        }
+    }
+    
+    // Tab switching
+    function showTab(tabName) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('form').forEach(form => form.classList.add('hidden'));
+        
+        if (tabName === 'signup') {
+            document.getElementById('signupForm').classList.remove('hidden');
+            document.querySelector('.tab:first-child').classList.add('active');
+        } else {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.querySelector('.tab:last-child').classList.add('active');
+        }
+    }
+    
+    // Load on start
+    window.onload = function() {
+        console.log('Page loaded, initializing...');
+        initialize();
+        
+        // Attach form handlers
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('signupForm').addEventListener('submit', handleSignup);
+    };
+</script>
+    
+    <style>
+        .status-indicator {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-indicator.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .status-indicator.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .terms {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .terms input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .terms a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .terms a:hover {
+            text-decoration: underline;
+        }
+        
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .form-options label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .forgot-password {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        
+        .back-link:hover {
+            color: var(--text);
+        }
+    </style>
+</body>
+</html>
+
+

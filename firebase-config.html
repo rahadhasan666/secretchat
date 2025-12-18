@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Configuration | Dark World</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card config-card">
+            <h1><i class="fas fa-fire"></i> Firebase Configuration</h1>
+            <p class="subtitle">Paste your Firebase configuration below</p>
+            
+            <div class="config-form">
+                <div class="input-group">
+                    <label>API Key:</label>
+                    <input type="text" id="apiKey" placeholder="AIzaSy..." class="config-input">
+                </div>
+                
+                <div class="input-group">
+                    <label>Auth Domain:</label>
+                    <input type="text" id="authDomain" placeholder="your-app.firebaseapp.com">
+                </div>
+                
+                <div class="input-group">
+                    <label>Project ID:</label>
+                    <input type="text" id="projectId" placeholder="your-project-id">
+                </div>
+                
+                <div class="input-group">
+                    <label>Storage Bucket:</label>
+                    <input type="text" id="storageBucket" placeholder="your-app.appspot.com">
+                </div>
+                
+                <div class="input-group">
+                    <label>Messaging Sender ID:</label>
+                    <input type="text" id="messagingSenderId" placeholder="123456789012">
+                </div>
+                
+                <div class="input-group">
+                    <label>App ID:</label>
+                    <input type="text" id="appId" placeholder="1:123456789012:web:...">
+                </div>
+                
+                <div class="input-group">
+                    <label>VAPID Key (Optional - for FCM):</label>
+                    <input type="text" id="vapidKey" placeholder="BLxV..." class="optional-field">
+                    <small class="optional-label">Optional</small>
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="saveConfig()" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Configuration
+                    </button>
+                    <button onclick="window.location.href='index.html'" class="btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Login
+                    </button>
+                    <button onclick="testConfig()" class="btn-test">
+                        <i class="fas fa-vial"></i> Test Connection
+                    </button>
+                </div>
+                
+                <div id="configStatus" class="status-message hidden"></div>
+            </div>
+            
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> How to get these values:</h3>
+                <ol>
+                    <li>Go to Firebase Console (console.firebase.google.com)</li>
+                    <li>Create a new project or select existing</li>
+                    <li>Click on your project settings (gear icon)</li>
+                    <li>Under "Your apps", select your web app</li>
+                    <li>Copy the configuration object</li>
+                    <li>For VAPID key: Cloud Messaging → Web Configuration → Generate Key Pair</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function saveConfig() {
+            const config = {
+                apiKey: document.getElementById('apiKey').value,
+                authDomain: document.getElementById('authDomain').value,
+                projectId: document.getElementById('projectId').value,
+                storageBucket: document.getElementById('storageBucket').value,
+                messagingSenderId: document.getElementById('messagingSenderId').value,
+                appId: document.getElementById('appId').value,
+                vapidKey: document.getElementById('vapidKey').value || null
+            };
+            
+            localStorage.setItem('firebaseConfig', JSON.stringify(config));
+            
+            const status = document.getElementById('configStatus');
+            status.textContent = '✓ Configuration saved successfully!';
+            status.className = 'status-message success';
+            status.classList.remove('hidden');
+            
+            setTimeout(() => {
+                status.classList.add('hidden');
+            }, 3000);
+        }
+        
+        function testConfig() {
+            const config = localStorage.getItem('firebaseConfig');
+            const status = document.getElementById('configStatus');
+            
+            if (!config) {
+                status.textContent = '✗ No configuration found. Please save first.';
+                status.className = 'status-message error';
+                status.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                JSON.parse(config);
+                status.textContent = '✓ Configuration is valid!';
+                status.className = 'status-message success';
+                status.classList.remove('hidden');
+            } catch (e) {
+                status.textContent = '✗ Invalid configuration format';
+                status.className = 'status-message error';
+                status.classList.remove('hidden');
+            }
+        }
+        
+        // Load existing config if available
+        window.onload = function() {
+            const savedConfig = localStorage.getItem('firebaseConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                Object.keys(config).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element && config[key]) {
+                        element.value = config[key];
+                    }
+                });
+            }
+        };
+    </script>
+</body>
+</html>
